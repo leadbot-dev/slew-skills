@@ -90,6 +90,7 @@ Never put secrets in the deployed files — use `slew env set`.
 | Custom domain | `slew domains add www.example.com` → CNAME to the printed target, re-run for TLS |
 | Check a domain's TLS | `slew domains cert www.example.com` |
 | Throwaway preview URL | `slew share <file-or-dir>` (expires after 7 days; `--ttl 30` max) |
+| Password-protect a site | `slew password set <password>` — visitors get an unlock screen on every domain; `slew password rm` reopens it. For shares: `slew share <dir> --password <pw>` |
 | CI deploy token | `slew token cli "CI"` → use as `SLEW_TOKEN`; for teams prefer `slew org token <org> deploy` so it survives people leaving |
 | Open web console | `slew dashboard` |
 
