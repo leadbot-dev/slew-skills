@@ -29,6 +29,8 @@ curl -fsSL https://skills.slew.cloud/skills/slew-deploy/SKILL.md \
 | Skill | What it teaches the agent |
 | --- | --- |
 | [`slew-deploy`](skills/slew-deploy/SKILL.md) | Deploy static sites and server apps to slew: init, deploy, verify, git push-to-deploy, env vars, logs, rollbacks, domains, shares. |
+| [`slew-share`](skills/slew-share/SKILL.md) | Publish an HTML plan, report, or mockup to a temporary public URL via `slew share` — expires on its own (default 7 days). |
+| [`slew-forms`](skills/slew-forms/SKILL.md) | Wire HTML forms to Slew Forms: self-registering endpoints, honeypot spam protection, thank-you redirects, notifications, retention, CSV export. |
 
 ## Repository layout
 
