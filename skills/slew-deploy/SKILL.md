@@ -1,6 +1,6 @@
 ---
 name: slew-deploy
-description: Deploy the current project to Slew (slew.cloud) — an EU-native hosting platform with instant static deploys, server runtimes, git push-to-deploy with PR previews, rollbacks, custom domains, and cookieless analytics. Use this skill whenever the user wants to deploy, ship, publish, or host a site or app, get a public URL for their work, "put it live", set up deploy-on-push, roll back a bad deploy, or check logs, env vars, domains, or traffic on Slew — even if they don't name Slew explicitly but the project is linked to it (a `slew.json` file exists).
+description: Deploy the current project to Slew (slew.cloud) — an EU-native hosting platform with instant static deploys, server runtimes, a managed Postgres database per project, git push-to-deploy with PR previews, rollbacks, custom domains, and cookieless analytics. Use this skill whenever the user wants to deploy, ship, publish, or host a site or app, get a public URL for their work, "put it live", set up deploy-on-push, add a database to a server app, roll back a bad deploy, or check logs, env vars, domains, or traffic on Slew — even if they don't name Slew explicitly but the project is linked to it (a `slew.json` file exists).
 ---
 
 # Deploy to Slew
@@ -79,6 +79,30 @@ slew logs                # runtime logs ("scaled to zero" = hit the URL to wake 
 ```
 
 Never put secrets in the deployed files — use `slew env set`.
+
+## Database (server apps)
+
+Each project can have one managed Postgres database. Use it when a server app needs to store data and has no database yet. If `DATABASE_URL` already points somewhere else (Supabase, Neon, …), leave it alone: `slew db create` refuses while `DATABASE_URL` is set.
+
+Make the app and the ORM config read `process.env.DATABASE_URL`. Then, in the linked project directory:
+
+```sh
+slew db create                             # sets DATABASE_URL on the project, restarts the app
+slew db run -- npx drizzle-kit migrate     # Drizzle (or: npx drizzle-kit push)
+slew db run -- npx prisma migrate deploy   # Prisma (or: npx prisma db push)
+```
+
+Then deploy. `slew db run` opens a tunnel and runs the command with `DATABASE_URL` pointing at it. `slew db psql` opens a SQL shell; `slew db` shows size and limit.
+
+- The `DATABASE_URL` value only works inside Slew. Never copy it into a local `.env`; from this machine, go through `slew db run` or `slew db connect`.
+- Use the URL as is. Don't add `sslmode=require`.
+- Arguments for the wrapped command go after `--`: `slew db psql -- -c 'select 1'`.
+- `prisma migrate dev` fails (it needs a shadow database). Use `migrate deploy` or `db push`.
+- Git builds have no database access. Don't run migrations or queries in the build command; use `slew db run`, or migrate when the server starts.
+- Keep the pool small, about `max: 5`. Each database allows 20 connections, and during a deploy the old and new instance both hold some.
+- PR previews use the same database as production.
+- Server apps only, Postgres only, one database per project. Files the server writes to disk are gone after a restart, so SQLite does not persist.
+- Run `slew db rm` (deletes all data) or `slew db rotate` (closes connections, restarts the app) only when the user asks for it.
 
 ## Ongoing operations
 
