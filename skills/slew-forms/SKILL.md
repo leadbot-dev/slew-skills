@@ -15,7 +15,9 @@ Point any HTML form at the endpoint, on the site's own origin:
 <form action="/_slew/forms/contact" method="POST">
   <input name="email" type="email" required>
   <textarea name="message"></textarea>
-  <input name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
+  <div style="position:absolute;left:-9999px" aria-hidden="true">
+    <input name="_website" tabindex="-1" autocomplete="off">
+  </div>
   <button>Send</button>
 </form>
 ```
@@ -23,7 +25,8 @@ Point any HTML form at the endpoint, on the site's own origin:
 Rules that matter when generating the markup:
 
 - The path segment after `/_slew/forms/` names the form (`contact`, `signup`, …) — one project holds up to 20 distinct forms.
-- `_gotcha` is a spam honeypot: keep it hidden (inline style or CSS), never autofillable. Bots that fill it get a fake success and nothing is stored.
+- `_website` is a spam honeypot: hide its wrapper off-screen as shown, never with `display:none` on the input itself (bots check for that), and keep it non-autofillable. Bots that fill it get a fake success and nothing is stored. `_gotcha` still works for existing forms, but bots know that name, so don't use it in new markup.
+- Submissions are accepted only from pages on the site itself (the browser's `Sec-Fetch-Site` / `Origin` header). Posting from a server or script is refused with `cross_site_submission`.
 - Field names starting with `_` are reserved for form controls and never stored as data.
 - The endpoint is same-origin, so the identical markup works on `<project>.slew.cloud`, custom domains, and branch domains. Never hardcode an absolute host.
 - File inputs are ignored (files are not stored); the rest of the submission goes through. Submission limit: 100 fields, 32 KB.
@@ -49,6 +52,7 @@ After deploying, submit once and check it landed:
 
 ```sh
 curl -s -X POST https://<project>.slew.cloud/_slew/forms/contact \
+  -H 'Origin: https://<project>.slew.cloud' \
   -H 'Content-Type: application/json' -d '{"email":"test@example.com"}'   # → {"ok":true}
 slew forms                      # the form now lists with 1 submission
 slew forms submissions contact  # shows the test submission
